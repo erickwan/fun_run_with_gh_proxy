@@ -330,7 +330,7 @@
   // Same three modes as the registration page: 'apps-script' (served by
   // Apps Script), 'remote' (static hosting with SCRIPT_URL set to the web
   // app /exec URL, called over anonymous fetch), or 'preview' (sample data).
-  var SCRIPT_URL = '';  // set for static deployments; leave '' otherwise
+  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvvKHnuFWu24TViY5HdDsYysq8qqryBM2zLG9xVvLEY8eW_N_oIfvHqbaE9FulRBgg/exec';  // set for static deployments; leave '' otherwise
   var MODE = (window.google && window.google.script && window.google.script.run)
     ? 'apps-script' : (SCRIPT_URL ? 'remote' : 'preview');
   var LIVE = MODE !== 'preview';
