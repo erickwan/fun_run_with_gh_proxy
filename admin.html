@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- ARTIFACT-KEEP-START -->
+<title>Fun Run Dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;700&display=swap">
+<style>
+  :root {
+    --ink: #172A4D;
+    --ink-soft: #51617D;
+    --paper: #F3F6FA;
+    --card: #FFFFFF;
+    --accent: #F04E23;
+    --accent-deep: #C93A14;
+    --line: #D8E0EC;
+    --go: #157A4E;
+    --display: 'Anton', 'Arial Narrow', Impact, sans-serif;
+    --body: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.5;
+    padding-inline: 16px;
+    padding-block: 0 64px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+
+  .preview-note {
+    display: none;
+    background: var(--ink);
+    color: #fff;
+    font-size: 13px;
+    text-align: center;
+    padding: 8px 14px;
+    border-radius: 0 0 10px 10px;
+    margin: 0 auto 4px;
+    max-width: 880px;
+  }
+  .preview-note.on { display: block; }
+
+  header { padding-block: 30px 6px; }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-deep);
+    margin: 0 0 4px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(30px, 6vw, 42px);
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+
+  /* ---------- Login ---------- */
+  .login-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 420px;
+    margin-top: 20px;
+  }
+  .login-card p { margin: 0 0 14px; color: var(--ink-soft); font-size: 14px; }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  input[type="password"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font: 400 15px var(--body);
+    color: var(--ink);
+    background: #fff;
+    margin-bottom: 14px;
+  }
+  input:focus-visible, button:focus-visible {
+    outline: 3px solid rgba(240, 78, 35, 0.45);
+    outline-offset: 1px;
+  }
+  .btn {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 11px 26px;
+    font: 700 15px var(--body);
+    cursor: pointer;
+  }
+  .btn:hover { background: var(--accent-deep); }
+  .btn[disabled] { opacity: 0.6; cursor: wait; }
+  .error {
+    display: none;
+    margin-top: 14px;
+    background: #FBEDE8;
+    border: 1px solid #F0BFAF;
+    color: #8C2B10;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+  }
+  .error.on { display: block; }
+
+  /* ---------- Dashboard ---------- */
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    margin: 16px 0 18px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .refresh {
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--ink);
+    font: 600 13px var(--body);
+    padding: 5px 14px;
+    cursor: pointer;
+  }
+  .refresh:hover { border-color: var(--accent); color: var(--accent-deep); }
+
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .tile {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .tile .k {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+  }
+  .tile .v {
+    font-family: var(--display);
+    font-size: 44px;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+  }
+  .tile .v .of { font-size: 20px; color: var(--ink-soft); }
+  .meter {
+    height: 6px;
+    background: var(--paper);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .meter .fill { height: 100%; background: var(--accent); border-radius: 3px; }
+
+  .panel.timeline { margin-top: 14px; }
+  .chart-box { position: relative; }
+  .chart-box svg { display: block; width: 100%; }
+  .chart-tip {
+    position: absolute;
+    display: none;
+    background: var(--ink);
+    color: #fff;
+    font-size: 12px;
+    line-height: 1.35;
+    padding: 6px 9px;
+    border-radius: 7px;
+    pointer-events: none;
+    white-space: nowrap;
+    transform: translate(-50%, -100%);
+  }
+
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 14px;
+  }
+  @media (max-width: 700px) { .panels { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .panel h2 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    margin: 0 0 4px;
+  }
+  .panel .sub { margin: 0 0 12px; font-size: 13px; color: var(--ink-soft); }
+
+  .bar-row {
+    display: grid;
+    grid-template-columns: minmax(96px, 130px) 1fr 34px;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .bar-row:hover { background: var(--paper); }
+  .bar-row .lbl { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+  .bar-row .track { height: 14px; }
+  .bar-row .fill {
+    height: 100%;
+    border-radius: 0 4px 4px 0;
+    min-width: 2px;
+    background: var(--ink);
+  }
+  .bar-row .fill.zero { background: transparent; }
+  .panel.shirts .fill { background: var(--accent); }
+  .bar-row .val {
+    text-align: right;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-soft);
+  }
+
+  footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+</style>
+<!-- ARTIFACT-KEEP-END -->
+</head>
+<body>
+<!-- ARTIFACT-BODY-START -->
+<div class="preview-note" id="previewNote">
+  Design preview with sample data — any password unlocks it here.
+  The deployed dashboard requires the real organizer password and shows live registrations.
+</div>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Peninsula Bridge Fun Run · 10.04.26</p>
+    <h1>Race Day Dashboard</h1>
+  </header>
+
+  <main>
+    <section id="login" aria-label="Organizer sign-in">
+      <div class="login-card">
+        <p>This page is for event organizers. Enter the organizer password to see registration totals.</p>
+        <form id="loginForm">
+          <label for="pw">Organizer password</label>
+          <input type="password" id="pw" autocomplete="current-password" required>
+          <button type="submit" class="btn" id="unlockBtn">Unlock dashboard</button>
+        </form>
+        <div class="error" id="loginError" role="alert"></div>
+      </div>
+    </section>
+
+    <section id="dash" hidden aria-label="Registration summary">
+      <div class="meta-row">
+        <span id="updatedAt"></span>
+        <button type="button" class="refresh" id="refreshBtn">Refresh</button>
+      </div>
+
+      <div class="tiles">
+        <div class="tile">
+          <div class="k">Families</div>
+          <div class="v" id="tileFamilies">–</div>
+        </div>
+        <div class="tile">
+          <div class="k">Participants</div>
+          <div class="v" id="tileParticipants">–</div>
+        </div>
+        <div class="tile">
+          <div class="k">Free tees claimed</div>
+          <div class="v"><span id="tileShirts">–</span><span class="of" id="tileShirtLimit"></span></div>
+          <div class="meter"><div class="fill" id="shirtMeter" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="panel timeline">
+        <h2>Sign-ups over time</h2>
+        <p class="sub">Cumulative registered participants by day.</p>
+        <div class="chart-box" id="timeChart"></div>
+      </div>
+
+      <div class="panels">
+        <div class="panel">
+          <h2>Runners by category</h2>
+          <p class="sub">One row per registered runner’s category.</p>
+          <div id="catRows"></div>
+        </div>
+        <div class="panel shirts">
+          <h2>T-shirts by size</h2>
+          <p class="sub">Sizes claimed by the first-100 free tee runners.</p>
+          <div id="sizeRows"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>Registrations land in the Google Sheet — this page just totals them.</footer>
+</div>
+
+<script>
+  var CATEGORY_ORDER = [
+    'Student Grade 6', 'Student Grade 7', 'Student Grade 8', 'Student Grade 9',
+    'Student Grade 10', 'Student Grade 11', 'Student Grade 12',
+    'Alum', 'Faculty/Staff', 'Parent/Guardian',
+    'Sibling Under 10', 'Sibling Over 10', 'Other', 'Peninsula Bridge'
+  ];
+  var SHIRT_SIZE_ORDER = ['Child M', 'Child XL/Adult XS', 'Adult S', 'Adult M', 'Adult L', 'Adult XL', 'Adult XXL'];
+
+  // Same three modes as the registration page: 'apps-script' (served by
+  // Apps Script), 'remote' (static hosting with SCRIPT_URL set to the web
+  // app /exec URL, called over anonymous fetch), or 'preview' (sample data).
+  var SCRIPT_URL = '';  // set for static deployments; leave '' otherwise
+  var MODE = (window.google && window.google.script && window.google.script.run)
+    ? 'apps-script' : (SCRIPT_URL ? 'remote' : 'preview');
+  var LIVE = MODE !== 'preview';
+  var savedPassword = '';
+
+  function callBackend(request, onOk, onErr) {
+    if (MODE === 'apps-script') {
+      google.script.run.withSuccessHandler(onOk).withFailureHandler(onErr)
+        .getAdminStats(request.password);
+    } else {
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(request)
+      }).then(function (r) { return r.json(); })
+        .then(function (res) {
+          if (res && res.ok) onOk(res.result);
+          else throw new Error((res && res.error) || 'Request failed.');
+        })
+        .catch(function (err) { onErr(err); });
+    }
+  }
+
+  var DEMO_STATS = {
+    updatedAt: new Date().toISOString(),
+    families: 44,
+    participants: 92,
+    byCategory: {
+      'Student Grade 6': 8, 'Student Grade 7': 11, 'Student Grade 8': 9,
+      'Student Grade 9': 7, 'Student Grade 10': 6, 'Student Grade 11': 5,
+      'Student Grade 12': 4, 'Alum': 6, 'Faculty/Staff': 9,
+      'Parent/Guardian': 14, 'Sibling Under 10': 4, 'Sibling Over 10': 2, 'Other': 2,
+      'Peninsula Bridge': 5
+    },
+    byShirtSize: {
+      'Child M': 11, 'Child XL/Adult XS': 9,
+      'Adult S': 13, 'Adult M': 19, 'Adult L': 12, 'Adult XL': 6, 'Adult XXL': 6
+    },
+    shirtsClaimed: 76,
+    shirtLimit: 100
+  };
+  // Sample sign-up curve: 92 registrations accelerating over three weeks.
+  (function () {
+    var total = 92, days = 21, now = Date.now(), times = [], acc = 0;
+    for (var i = 0; i < days; i++) {
+      var target = Math.round(total * Math.pow((i + 1) / days, 1.6));
+      for (var j = 0; j < target - acc; j++) {
+        times.push(now - (days - 1 - i) * 864e5 + j * 36e5);
+      }
+      acc = target;
+    }
+    DEMO_STATS.registrationTimes = times;
+  })();
+
+  function barRows(container, order, counts) {
+    var max = 1;
+    order.forEach(function (k) { max = Math.max(max, counts[k] || 0); });
+    container.innerHTML = '';
+    order.forEach(function (k) {
+      var n = counts[k] || 0;
+      var row = document.createElement('div');
+      row.className = 'bar-row';
+      row.title = k + ': ' + n;
+      var lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = k;
+      var track = document.createElement('div'); track.className = 'track';
+      var fill = document.createElement('div');
+      fill.className = 'fill' + (n === 0 ? ' zero' : '');
+      fill.style.width = (n / max * 100) + '%';
+      track.appendChild(fill);
+      var val = document.createElement('span'); val.className = 'val'; val.textContent = n;
+      row.appendChild(lbl); row.appendChild(track); row.appendChild(val);
+      container.appendChild(row);
+    });
+  }
+
+  var lastTimes = null;
+
+  function fmtDay(t) {
+    return new Date(t).toLocaleDateString([], { month: 'short', day: 'numeric' });
+  }
+
+  function renderTimeChart(times) {
+    lastTimes = times || [];
+    var box = document.getElementById('timeChart');
+    box.innerHTML = '';
+    if (!lastTimes.length) {
+      box.innerHTML = '<p class="sub" style="margin:0">No registrations yet — the curve appears with the first sign-up.</p>';
+      return;
+    }
+
+    // Bucket by local day, then accumulate.
+    var byDay = {};
+    lastTimes.forEach(function (t) {
+      var d = new Date(t); d.setHours(0, 0, 0, 0);
+      byDay[+d] = (byDay[+d] || 0) + 1;
+    });
+    var dayKeys = Object.keys(byDay).map(Number).sort(function (a, b) { return a - b; });
+    var pts = [], cum = 0;
+    for (var d = new Date(dayKeys[0]); +d <= dayKeys[dayKeys.length - 1]; d.setDate(d.getDate() + 1)) {
+      cum += (byDay[+d] || 0);
+      pts.push({ day: +d, added: byDay[+d] || 0, cum: cum });
+    }
+
+    var W = Math.max(300, box.clientWidth), H = 210;
+    var m = { l: 34, r: 46, t: 14, b: 26 };
+    var maxY = pts[pts.length - 1].cum;
+    function x(i) { return pts.length === 1 ? m.l + (W - m.l - m.r) / 2 : m.l + (W - m.l - m.r) * i / (pts.length - 1); }
+    function y(v) { return m.t + (H - m.t - m.b) * (1 - v / maxY); }
+
+    // Y ticks on a 1/2/5 step, at most 4 gridlines plus the max.
+    var step = 1;
+    while (maxY / step > 4) step = ({ 1: 2, 2: 5 })[('' + step)[0]] * Math.pow(10, ('' + step).length - 1) || step * 2;
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" role="img" ' +
+      'aria-label="Cumulative sign-ups by day, ending at ' + maxY + '">';
+    for (var v = step; v <= maxY; v += step) {
+      svg += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="#D8E0EC" stroke-width="1"/>' +
+             '<text x="' + (m.l - 7) + '" y="' + (y(v) + 3.5) + '" text-anchor="end" font-size="11" fill="#51617D">' + v + '</text>';
+    }
+    // X tick labels: at most 5, evenly spaced days.
+    var nTicks = Math.min(5, pts.length);
+    for (var k = 0; k < nTicks; k++) {
+      var i = Math.round(k * (pts.length - 1) / Math.max(1, nTicks - 1));
+      svg += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="11" fill="#51617D">' + fmtDay(pts[i].day) + '</text>';
+    }
+    // Area + line + endpoint.
+    var line = pts.map(function (p, i) { return (i ? 'L' : 'M') + x(i) + ' ' + y(p.cum); }).join(' ');
+    svg += '<path d="' + line + ' L' + x(pts.length - 1) + ' ' + y(0) + ' L' + x(0) + ' ' + y(0) + ' Z" fill="rgba(23,42,77,0.08)"/>' +
+           '<path d="' + line + '" fill="none" stroke="#172A4D" stroke-width="2" stroke-linejoin="round"/>' +
+           '<circle id="tipDot" r="4" fill="#172A4D" stroke="#fff" stroke-width="1.5" cx="' + x(pts.length - 1) + '" cy="' + y(maxY) + '"/>' +
+           '<text x="' + (x(pts.length - 1) + 8) + '" y="' + (y(maxY) + 4) + '" font-size="12" font-weight="700" fill="#172A4D">' + maxY + '</text>' +
+           '</svg>';
+    box.innerHTML = svg + '<div class="chart-tip" id="chartTip"></div>';
+
+    var tip = document.getElementById('chartTip');
+    var dot = document.getElementById('tipDot');
+    var svgEl = box.querySelector('svg');
+    var endI = pts.length - 1;
+    svgEl.addEventListener('mousemove', function (e) {
+      var r = svgEl.getBoundingClientRect();
+      var mx = (e.clientX - r.left) * (W / r.width);
+      var i = Math.max(0, Math.min(pts.length - 1,
+        Math.round((mx - m.l) / ((W - m.l - m.r) / Math.max(1, pts.length - 1)))));
+      dot.setAttribute('cx', x(i)); dot.setAttribute('cy', y(pts[i].cum));
+      tip.style.display = 'block';
+      tip.style.left = (x(i) * r.width / W) + 'px';
+      tip.style.top = (y(pts[i].cum) * r.height / H - 8) + 'px';
+      tip.textContent = fmtDay(pts[i].day) + ' · ' + pts[i].cum + ' total (+' + pts[i].added + ')';
+    });
+    svgEl.addEventListener('mouseleave', function () {
+      tip.style.display = 'none';
+      dot.setAttribute('cx', x(endI)); dot.setAttribute('cy', y(pts[endI].cum));
+    });
+  }
+
+  window.addEventListener('resize', function () {
+    if (!document.getElementById('dash').hidden && lastTimes) renderTimeChart(lastTimes);
+  });
+
+  function render(stats) {
+    document.getElementById('login').hidden = true;
+    document.getElementById('dash').hidden = false;
+
+    document.getElementById('updatedAt').textContent =
+      'Updated ' + new Date(stats.updatedAt).toLocaleString([], {
+        month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+      });
+    document.getElementById('tileFamilies').textContent = stats.families;
+    document.getElementById('tileParticipants').textContent = stats.participants;
+    document.getElementById('tileShirts').textContent = stats.shirtsClaimed;
+    document.getElementById('tileShirtLimit').textContent = ' / ' + stats.shirtLimit;
+    document.getElementById('shirtMeter').style.width =
+      Math.min(100, stats.shirtsClaimed / stats.shirtLimit * 100) + '%';
+
+    renderTimeChart(stats.registrationTimes || []);
+    barRows(document.getElementById('catRows'), CATEGORY_ORDER, stats.byCategory || {});
+    barRows(document.getElementById('sizeRows'), SHIRT_SIZE_ORDER, stats.byShirtSize || {});
+  }
+
+  function showLoginError(msg) {
+    var el = document.getElementById('loginError');
+    el.textContent = msg;
+    el.classList.add('on');
+  }
+
+  function fetchStats(busyBtn) {
+    busyBtn.disabled = true;
+    var restore = function () { busyBtn.disabled = false; };
+    if (LIVE) {
+      callBackend({ action: 'adminStats', password: savedPassword },
+        function (stats) { restore(); render(stats); },
+        function (err) {
+          restore();
+          var msg = err && err.message ? err.message : 'Something went wrong. Please try again.';
+          if (document.getElementById('dash').hidden) showLoginError(msg);
+          else alert(msg);
+        });
+    } else {
+      setTimeout(function () {
+        restore();
+        DEMO_STATS.updatedAt = new Date().toISOString();
+        render(DEMO_STATS);
+      }, 400);
+    }
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    document.getElementById('loginError').classList.remove('on');
+    savedPassword = document.getElementById('pw').value;
+    fetchStats(document.getElementById('unlockBtn'));
+  });
+
+  document.getElementById('refreshBtn').addEventListener('click', function () {
+    fetchStats(this);
+  });
+
+  if (!LIVE) document.getElementById('previewNote').classList.add('on');
+</script>
+<!-- ARTIFACT-BODY-END -->
+</body>
+</html>
